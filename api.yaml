@@ -1,0 +1,1178 @@
+openapi: 3.0.0
+servers:
+  - url: 'https://stage2.munu.dev/ords/posmother/ecm'
+    description: Stage 2
+info:
+  version: '1.0'
+  title: ECM
+  description: ECM API
+  contact:
+    name: Thomas Berge
+    email: thomas.berge@munu.cloud
+paths:
+  /article:
+    get:
+      summary: List Articles
+      tags:
+        - Articles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+      operationId: list-articles
+      description: List all articles filtered by article_num. An empty or invalid filter will yield 204 No Content.
+      parameters:
+        - $ref: '#/components/parameters/article_num'
+  /articles:
+    post:
+      summary: Create Article
+      operationId: create-article
+      responses:
+        '200':
+          description: OK
+      x-internal: true
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              x-examples:
+                example-1:
+                  name: 'Pizza Margherita #10'
+                  display_name: Pizza Marggerita
+                  external_number: string
+                  item_group_number: string
+                  cost_price: 4.67
+                  is_weight: false
+                  ean:
+                    - 234567
+                    - 987896785
+                    - 33244897
+                  description: A delicious pizza
+                  group: Hot Food
+                  sub_group: Pizza
+                  nutri_allergens: 'nuts, lactose, wheat'
+                  nutri_ingredients: 'Wheat, salt, water, cheese, tomato'
+                  nutri_category: Kjølevare
+                  nutri_instructions: string
+                  nutri_days_expiry: 0
+                  nutri_producer: string
+                  prices:
+                    - tax_value_pct: 25
+                      net: 100
+                      gross: 125
+                      ledger_account_num: 3001
+                      customer_group:
+                        name: EMPLOYEES
+                        department: Department A
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                display_name:
+                  type: string
+                  minLength: 1
+                external_number:
+                  type: string
+                  minLength: 1
+                item_group_number:
+                  type: string
+                  minLength: 1
+                cost_price:
+                  type: number
+                is_weight:
+                  type: boolean
+                ean:
+                  type: array
+                  items:
+                    type: integer
+                description:
+                  type: string
+                  minLength: 1
+                group:
+                  type: string
+                  minLength: 1
+                sub_group:
+                  type: string
+                  minLength: 1
+                nutri_allergens:
+                  type: string
+                  minLength: 1
+                nutri_ingredients:
+                  type: string
+                  minLength: 1
+                nutri_category:
+                  type: string
+                  minLength: 1
+                nutri_instructions:
+                  type: string
+                  minLength: 1
+                nutri_days_expiry:
+                  type: number
+                nutri_producer:
+                  type: string
+                  minLength: 1
+                prices:
+                  type: array
+                  uniqueItems: true
+                  minItems: 1
+                  items:
+                    type: object
+                    properties:
+                      tax_value_perc:
+                        type: number
+                      net:
+                        type: number
+                      gross:
+                        type: number
+                      ledger_account:
+                        type: integer
+                      customer_group:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            minLength: 1
+                          department:
+                            type: string
+                            minLength: 1
+        description: ''
+      tags:
+        - Articles
+  '/article/{article_id}':
+    get:
+      summary: Get Article Details
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+      operationId: get-article
+      tags:
+        - Articles
+    parameters:
+      - $ref: '#/components/parameters/article_id'
+  /article/group:
+    get:
+      summary: List ArticleGroups
+      responses:
+        '200':
+          description: Array with article group objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArticleGroup'
+      description: 'Article group is the gropuing container for articles and can contain information about last modified data.  '
+      operationId: list-article-groups
+      deprecated: true
+      tags:
+        - Deprecated
+  '/article/group/{group_id}':
+    get:
+      parameters:
+        - in: path
+          name: group_id
+          required: true
+          schema:
+            type: integer
+      summary: List Articles in ArticleGroup
+      responses:
+        '200':
+          description: Array with Article objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+      operationId: list-article-group-articles
+      description: Lists all Articles in the specified ArticleGroup. The response is filtered on Article availability and will only return available Articles.
+      deprecated: true
+      tags:
+        - Deprecated
+    parameters:
+      - $ref: '#/components/parameters/group_id'
+  /articlegroups:
+    get:
+      summary: List ArticleGroups
+      tags:
+        - Articles
+      operationId: list-articlegroups
+      description: Article group is the grouping container for articles and can contain information about last modified data.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArticleGroup'
+  '/articlegroups/{articlegroup_id}/articles':
+    parameters:
+      - $ref: '#/components/parameters/articlegroup_id'
+    get:
+      summary: List Articles in ArticleGroup
+      tags:
+        - Articles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+      operationId: get-articlegroups-articlegroup_id-articles
+      description: Lists all Articles in the specified ArticleGroup. The response is filtered on Article availability and will only return available Articles.
+  /stores:
+    get:
+      responses:
+        '200':
+          description: |
+            Returns all active Stores for Customer (identified by session).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Store'
+      summary: List Stores
+      operationId: list-stores
+      description: Lists all Stores.
+      tags:
+        - Stores
+  '/stores/{store_id}':
+    get:
+      summary: Get Store details
+      tags:
+        - Stores
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Store'
+      operationId: get-store
+      description: Gets the details of the Store with the supplied store_id.
+    parameters:
+      - name: store_id
+        in: path
+        required: true
+        schema:
+          type: integer
+  '/stores/{store_id}/orders':
+    post:
+      summary: Create Order
+      operationId: create-order
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                x-examples:
+                  example-1:
+                    id: 0
+                    fulfilment_status: received
+                    created: '2022-03-22T11:14:03.074Z'
+                    table_number: string
+                    total: 0
+                    tip: 0
+                    prepaid: true
+                    payment_ref: string
+                    customer_id: string
+                    customer_name: string
+                    customer_phone: string
+                    takeaway: false
+                    delivery: false
+                    delivery_address: string
+                    order_ready_time: '2022-03-22T11:14:03.074Z'
+                    message_with_order: string
+                    order_lines:
+                      - article_id: 0
+                        quantity: 0
+                        price: 0
+                        price_without_modifiers: 0
+                        used_vat_code: high
+                        modifier_lines:
+                          - article_id: 0
+                            price: 0
+                properties:
+                  id:
+                    type: number
+                  fulfilment_status:
+                    type: string
+                    minLength: 1
+                  created:
+                    type: string
+                    minLength: 1
+                  table_number:
+                    type: string
+                    minLength: 1
+                  total:
+                    type: number
+                  tip:
+                    type: number
+                  prepaid:
+                    type: boolean
+                  payment_ref:
+                    type: string
+                    minLength: 1
+                  customer_id:
+                    type: string
+                    minLength: 1
+                  customer_name:
+                    type: string
+                    minLength: 1
+                  customer_phone:
+                    type: string
+                    minLength: 1
+                  takeaway:
+                    type: boolean
+                  delivery:
+                    type: boolean
+                  delivery_address:
+                    type: string
+                    minLength: 1
+                  order_ready_time:
+                    type: string
+                    minLength: 1
+                  message_with_order:
+                    type: string
+                    minLength: 1
+                  order_lines:
+                    type: array
+                    uniqueItems: true
+                    minItems: 1
+                    items:
+                      type: object
+                      properties:
+                        article_id:
+                          type: number
+                        quantity:
+                          type: number
+                        price:
+                          type: number
+                        price_without_modifiers:
+                          type: number
+                        used_vat_code:
+                          type: string
+                          minLength: 1
+                        modifier_lines:
+                          type: array
+                          uniqueItems: true
+                          minItems: 1
+                          items:
+                            $ref: '#/components/schemas/ModifierLine'
+              examples:
+                Pre-paid order:
+                  value:
+                    id: 25724
+                    fulfilment_status: received
+                    created: '2022-04-05T11:56:51'
+                    total: 259
+                    prepaid: true
+                    payment_ref: 64ace026-71de-45fa-9510-739140bd0fc9
+                    takeaway: false
+                    delivery: false
+                    order_ready_time: '2022-04-05T14:45:22'
+                    order_lines:
+                      - article_id: 69578
+                        quantity: 1
+                        price: 259
+                        price_without_modifiers: 229
+                        used_vat_code: high
+      description: Creates a new order.
+      x-internal: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+            examples:
+              Pre-paid order:
+                value:
+                  created: '2022-08-24T14:15:22Z'
+                  total: 259
+                  prepaid: true
+                  payment_ref: 64ace026-71de-45fa-9510-739140bd0fc9
+                  customer_name: Hermanssen
+                  order_ready_time: '2022-08-24T14:55:22Z'
+                  order_lines:
+                    - article_id: 543
+                      quantity: 1
+                      price: 259
+                      price_without_modifiers: 229
+                      used_vat_code: high
+                      modifier_lines:
+                        - article_id: 1654
+                          price: 30
+      tags:
+        - Orders
+    parameters:
+      - $ref: '#/components/parameters/store_id'
+  '/stores/{store_id}/orders/{order_id}':
+    parameters:
+      - $ref: '#/components/parameters/order_id'
+      - $ref: '#/components/parameters/store_id'
+    get:
+      summary: Get Order
+      tags:
+        - Orders
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+      operationId: get-order
+      x-internal: false
+      description: Returns an Order object.
+  '/stores/{store_id}/orders/{order_id}/doc':
+    parameters:
+      - $ref: '#/components/parameters/store_id'
+      - $ref: '#/components/parameters/order_id'
+    get:
+      summary: Get Order Document
+      tags:
+        - Orders
+      responses:
+        '200':
+          description: OK
+      operationId: get-order-document
+      description: Returns a document for the given `order_id`. The document is a Order Confirmation until the order has been settled. A settled order returns a Sales Receipt document.
+components:
+  schemas:
+    ArticleGroup:
+      type: object
+      description: In Munu there are `ArticleGroups` and Sub-Groups. An `Article` may only be placed in a Sub-Group. In the API the structure is collapsed to single ArticleGroup list. The name of the ArticleGroup reflects both the ArticleGroup and its Sub-Group seperated by a dash.
+      title: ArticleGroup
+      properties:
+        id:
+          type: number
+          example: 10910
+        name:
+          type: string
+          example: Pizza - Hawaii
+        last_modified:
+          type: string
+          format: date-time
+      x-examples: {}
+    Article:
+      required:
+        - id
+        - name
+        - group_id
+      properties:
+        id:
+          type: number
+          example: 4009876
+        name:
+          type: string
+          example: Pizza Margherita
+        group_id:
+          type: number
+          example: 12345
+        description:
+          type: string
+          description: Description text about the article. Can be shown to end-users
+        short_description:
+          type: string
+          description: Short description text about the article. Useful for listing articles. Can be shown to end-users
+        article_num:
+          type: string
+          description: Foreign key identifying the Article
+          example: '50221'
+        eans:
+          type: array
+          description: EAN numbers (barcode values)
+          items:
+            type: object
+            properties:
+              ean:
+                type: string
+                example: '123456789012'
+        is_weight_price:
+          type: boolean
+          description: Determines is the price of the article is pr kilogram
+          default: false
+        nutrition_declaration:
+          type: string
+          description: Declaration of nutrition content
+        nutrition_allergens:
+          type: string
+          description: List of allergens
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticlePrice'
+    OrderLine:
+      type: object
+      x-examples:
+        Pizza Half & Half:
+          article_id: 154
+          quantity: 1
+          price: 269
+          price_without_modifiers: 249
+          used_vat_code: high
+          comment: Pineapple only on half
+          modifier_lines:
+            - article_id: 1388
+              price: 20
+              comment: Extra bacon only on half without pineapple.
+        'Reverse Hamburger, 2 extra patties':
+          article_id: 16543
+          quantity: 1
+          price: 129
+          price_without_modifiers: 99
+          used_vat_code: high
+          comment: Please stack all ingredients in reverse order.
+          modifier_lines:
+            - article_id: 51
+              price: 15
+            - article_id: 51
+              price: 15
+      title: OrderLine
+      properties:
+        article_id:
+          type: number
+        quantity:
+          type: number
+        price:
+          type: number
+          description: 'total gross price for order line, including price of eventual modifier_line items'
+        price_without_modifiers:
+          type: number
+          description: 'total gross price for order line, not including and eventual modifiers'
+        used_vat_code:
+          type: string
+          enum:
+            - zero
+            - low
+            - middle
+            - high
+          default: high
+        comment:
+          type: string
+        modifier_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModifierLine'
+      required:
+        - article_id
+        - quantity
+        - price
+        - used_vat_code
+      description: |-
+        An `OrderLine` is an object that represents the sale of an `Article`. The article may be modified through `ModifierLines`, which allows for added sales. The `price` field is the price _per unit_ of the article with the sum of each modifier line added. The `price_without_modifiers` field in turn is the unit price.
+
+        `used_vat_rate` are VAT Code rates that are divided into enums representing the rate of the VAT category at the time the `OrderLine` was created. The mapping of the enums to specific VAT category are country specific.
+
+        ### Norway
+
+        | ENUM  | VAT Category |
+        | ------------- | ------------- |
+        | high  | Normal rate  |
+        | middle  | Foodstuffs  |
+        | low  | Passenger transport, cinema tickets, letting of rooms.  |
+        | zero  | Tax exempt  |
+
+        More info at [Skatteetaten](https://www.skatteetaten.no/en/rates/value-added-tax/)
+
+        ### Sweden
+
+        | ENUM  | VAT Category |
+        | ------------- | ------------- |
+        | high  | Normal rate  |
+        | middle  | Foodstuffs  |
+        | low  | Newspapers, magazines, books, passenger transport, concerts.  |
+        | zero  | Tax exempt  |
+
+        More info at [Skatteverket](https://skatteverket.se/servicelankar/otherlanguages/inenglish/businessesandemployers/startingandrunningaswedishbusiness/declaringtaxesbusinesses/vat/vatratesongoodsandservices.4.676f4884175c97df419255d.html)
+    Order:
+      required:
+        - created
+        - total
+        - payment_ref
+        - prepaid
+      properties:
+        created:
+          type: string
+          format: date-time
+        table_number:
+          type: string
+          description: 'If Client system can get guest table number, this should be put into this field'
+        total:
+          type: number
+          description: Order total (gross). Used for validating order line details agains prepaid amount. Raises exception if not matching order lines.
+        tip:
+          type: number
+          description: Tip amount (not included in the Order total). Total paid is Order total + Tip
+        prepaid:
+          type: boolean
+          default: true
+        payment_ref:
+          type: string
+          description: External payment ref to include in order and receipt
+        customer_id:
+          type: string
+          description: Unique (guid) identifier for guest (end user)
+        customer_name:
+          type: string
+          description: 'Full name of end user (guest), not neccesary if customer_id is set'
+        customer_phone:
+          type: string
+          description: Full phone number of end user (guest). Including country code if applicable. Not neccesary if customer_id is set
+        takeaway:
+          type: boolean
+          description: If guest is to pick-up order later
+          default: false
+        delivery:
+          type: boolean
+          description: If order should be delivered to guest outside local store
+          default: false
+        delivery_address:
+          type: string
+          description: 'If Delivery is True, this is required'
+        order_ready_time:
+          type: string
+          format: date-time
+          description: Date and time for order to be ready. Should be coordinated with customer store default delivery time
+        message_with_order:
+          type: string
+          description: Message (often from end user (guest)) about the order. Is printed on item slips and receipt
+        order_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLine'
+      x-examples: {}
+      description: ''
+    ModifierLine:
+      title: ModifierLine
+      type: object
+      description: An extra article that is added as a modification to a `OrderLine`. Examples can include extra bacon on a hamburger or double pineapple on a pizza. You also have the option of leaving a comment related to the `ModifierLine`.
+      x-examples:
+        Extra Hamburger Patty:
+          article_id: 154
+          price: 15
+        Anchovy on Pizza Margherita:
+          article_id: 1678
+          price: 20
+          comment: Only add anchovy to half of the pizza.
+      properties:
+        article_id:
+          type: number
+        price:
+          type: number
+        comment:
+          type: string
+    Store:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+          example: SuperSushi Stavanger
+        address_line:
+          type: string
+          example: Storgata 3
+        post_code:
+          type: string
+        post_place:
+          type: string
+        address_coordinates:
+          type: string
+          example: |
+            60.795617, 10.692435
+        phone:
+          type: string
+        public_email:
+          type: string
+          format: email
+        description:
+          type: string
+        opening_hours:
+          type: object
+          description: |
+            Defines when store is open to public. Does NOT affect Availability times that are defining when services is available / orders can be placed. OpeninghHours should only be used for informational purposes eg on a "about us" page.
+          properties:
+            hours:
+              type: object
+              properties:
+                monday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                tuesday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                wednesday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                thursday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                friday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                saturday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                sunday:
+                  $ref: '#/components/schemas/TimeslotSet'
+        order_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderType'
+    TimeslotSet:
+      type: object
+      description: 'Time in HH24:MI format. Both `from` and `to` null equals no availablility'
+      properties:
+        from:
+          type: string
+          example: '07:30'
+        to:
+          type: string
+          example: '16:45'
+    OrderType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        display_name:
+          type: string
+          description: Optional end-user friendly name of order type
+        description:
+          type: string
+        delivery_type:
+          type: object
+          properties:
+            value:
+              type: string
+              enum:
+                - delivery
+                - inhouse
+                - takeaway
+            time_selection_header:
+              type: string
+            time_selection_description:
+              type: string
+            as_soon_as_possible_text:
+              type: string
+              example: 'Estimated preparation time is #TIME#'
+        delivery_time_selection:
+          type: object
+          properties:
+            is_asap_visible:
+              type: boolean
+            is_datetime_picker_visisble:
+              type: boolean
+            interval:
+              type: integer
+            future_days_max_limit:
+              type: integer
+            is_selectable:
+              type: boolean
+            is_selectable_today:
+              type: boolean
+        guest_count:
+          type: object
+          properties:
+            value:
+              type: string
+              enum:
+                - hidden
+                - shown
+                - mandatory
+            title:
+              type: string
+              example: How many persons?
+            description:
+              type: string
+              example: For how many persons should we include cutlery and plates
+        order_deadline:
+          type: object
+          description: Used instead of execution time for orders usually placed in future (not same day).
+          properties:
+            days:
+              type: integer
+              description: Number of working days ahead (closed availability is not counted)
+            time:
+              type: string
+              example: '16:45'
+        order_limit:
+          type: object
+          properties:
+            min_value:
+              type: number
+            max_value:
+              type: number
+            max_quantity:
+              type: number
+            max_quantity_pr_item:
+              type: number
+        order_execution_time:
+          type: object
+          description: Used for orders to be delivered same day
+          properties:
+            value:
+              type: integer
+              description: Number of minutes to execute order from placement
+            asap_included_in_opening_hour:
+              type: boolean
+            asap_included_in_closing_hour:
+              type: boolean
+        delivery_comment:
+          type: object
+          properties:
+            value:
+              type: string
+              enum:
+                - hidden
+                - shown
+                - mandatory
+            title:
+              type: string
+              example: Blue doorbell / Meeting room number / floor
+            description:
+              type: string
+              example: Please include delivery comments etc here
+        order_comment:
+          type: object
+          properties:
+            value:
+              type: string
+              enum:
+                - hidden
+                - shown
+                - mandatory
+            title:
+              type: string
+              example: 'Remarks, important instructions, allergies'
+            description:
+              type: string
+              example: Please include order comments here
+        availability_hours:
+          type: object
+          properties:
+            hours:
+              type: object
+              properties:
+                monday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                tuesday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                wednesday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                thursday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                friday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                saturday:
+                  $ref: '#/components/schemas/TimeslotSet'
+                sunday:
+                  $ref: '#/components/schemas/TimeslotSet'
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Page'
+      description: ''
+    ArticlePrice:
+      properties:
+        tax_value_pct:
+          type: number
+          example: 25
+        net_price:
+          type: number
+        gross_price:
+          type: number
+        prevent_discount:
+          type: boolean
+          description: 'true if no discounts should be given, except price group is overriding'
+        price_groups:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: Id of price group
+              name:
+                type: string
+                description: Name of the price group
+              active_from:
+                type: string
+                format: date
+                description: The first valid date. Might be in the future
+              active_to:
+                type: string
+                format: date
+                description: The last valid date. Can be null meaning no end date for the price group
+              weekdays:
+                type: string
+                description: 'Colon separated list of valid days. 1 = monday -> 7 = sunday, value = 0 or `null` = valid all days'
+              net_price:
+                type: number
+              gross_price:
+                type: number
+      required:
+        - tax_value_pct
+        - net
+        - gross
+        - ledger_account_num
+    ArticleStatusEvent:
+      type: object
+      title: ArticleStatusEvent
+      description: ''
+      properties:
+        article_id:
+          type: integer
+        store_id:
+          type: integer
+        order_type_id:
+          type: integer
+        event_type:
+          type: string
+          enum:
+            - sold_out
+            - hidden
+            - disabled
+        message:
+          type: string
+        expire:
+          type: string
+          format: datetime
+      x-examples:
+        example:
+          article_id: 6473
+          store_id: 75
+          order_type_id: 1032
+          event_type: disabled
+          message: Article is currently not to be sold.
+          expire: '2022-03-25T10:40:52Z'
+    OrderTypeDeviationEvent:
+      type: object
+      x-examples:
+        Availability Hours:
+          store_id: 1352
+          deviation:
+            order_type_id: 161
+            availability_hours:
+              start: '2019-08-24T14:15:22Z'
+              available: true
+              from: '12:00'
+              to: '18:00'
+              message: Limited takeaway service today.
+          expire: '2022-04-12T22:00:00Z'
+        Order Execution Time:
+          store_id: 1352
+          deviation:
+            order_type_id: 161
+            order_execution_time:
+              minutes: 90
+          expire: '2022-04-12T22:00:00Z'
+      description: |-
+        An `OrderTypeDeviation` is a deviation to an `OrderType` for a given `Store`. There are two types of deviations supported; `availability_hours` and `order_execution_time`. Both type of deviations are given a `store_id` context and has an `expire` field that indicates when the deviation is no longer valid.
+
+        The events are triggered on a MunuPOS terminal. For example could a store decide to limit the availability of their takeaway OrderType for whatever reason. An `OrderTypeDeviationEvent` with an `availability_hours` object will then be sent.
+
+        If takeaway is taking longer than usual then the Store could issue a `OrderTypeDeviationEvent` with an `order_execution_time` where the `order_type_id` for takeaway is given a deviation time in the `minutes` field.
+      title: OrderTypeDeviationEvent
+      properties:
+        store_id:
+          type: integer
+          example: 1352
+        deviation:
+          oneOf:
+            - properties:
+                order_type_id:
+                  type: integer
+                  example: 161
+                availability_hours:
+                  type: object
+                  properties:
+                    start:
+                      type: string
+                      format: date-time
+                    available:
+                      type: boolean
+                    from:
+                      type: string
+                      example: '12:00'
+                    to:
+                      type: string
+                      example: '18:00'
+                    message:
+                      type: string
+                      example: Limited takeaway service today.
+            - properties:
+                order_type_id:
+                  type: integer
+                order_execution_time:
+                  type: object
+                  properties:
+                    minutes:
+                      type: integer
+          type: object
+        expire:
+          type: string
+          format: datetime
+          example: '2022-04-12T22:00:00Z'
+    Page:
+      title: Page
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+      required:
+        - id
+    Category:
+      title: Category
+      type: object
+      properties:
+        category_name:
+          type: string
+        article_ids:
+          type: array
+          items:
+            type: integer
+    OrderResponse:
+      properties:
+        id:
+          type: number
+          description: Unique id for posted order. Can be used to get order status
+        fulfilment_status:
+          type: string
+          enum:
+            - received
+            - registered
+            - accepted
+            - declined
+            - processed
+            - approved
+            - corrupted
+            - deleted
+        created:
+          type: string
+          format: date-time
+        table_number:
+          type: string
+          description: 'If Client system can get guest table number, this should be put into this field'
+        total:
+          type: number
+          description: Order total (gross). Used for validating order line details agains prepaid amount. Raises exception if not matching order lines.
+        tip:
+          type: number
+          description: Tip amount (not included in the Order total). Total paid is Order total + Tip
+        prepaid:
+          type: boolean
+          default: true
+        payment_ref:
+          type: string
+          description: External payment ref to include in order and receipt
+        customer_id:
+          type: string
+          description: Unique (guid) identifier for guest (end user)
+        customer_name:
+          type: string
+          description: 'Full name of end user (guest), not neccesary if customer_id is set'
+        customer_phone:
+          type: string
+          description: Full phone number of end user (guest). Including country code if applicable. Not neccesary if customer_id is set
+        takeaway:
+          type: boolean
+          description: If guest is to pick-up order later
+          default: false
+        delivery:
+          type: boolean
+          description: If order should be delivered to guest outside local store
+          default: false
+        delivery_address:
+          type: string
+          description: 'If Delivery is True, this is required'
+        order_ready_time:
+          type: string
+          format: date-time
+          description: Date and time for order to be ready. Should be coordinated with customer store default delivery time
+        message_with_order:
+          type: string
+          description: Message (often from end user (guest)) about the order. Is printed on item slips and receipt
+        order_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLine'
+  parameters:
+    group_id:
+      name: group_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    store_id:
+      name: store_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    article_id:
+      name: article_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    article_num:
+      name: article_num
+      in: query
+      required: false
+      schema:
+        type: string
+    article_number:
+      name: article_number
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter that includes all articles containing article number.
+    order_id:
+      name: order_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    articlegroup_id:
+      name: articlegroup_id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses: {}
+  securitySchemes: {}
+tags:
+  - name: Articles
+  - name: Deprecated
+  - name: Orders
+  - name: Stores
+
